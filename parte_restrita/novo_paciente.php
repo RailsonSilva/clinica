@@ -1,0 +1,304 @@
+<?php
+
+require_once "../conexaoMysql.php";
+require_once "../autenticacao.php";
+
+session_start();
+$pdo = mysqlConnect();
+exitWhenNotLogged($pdo);
+
+?>
+
+
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+    <title>Novo Paciente</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        #modal{
+            width: 100vw;
+            height: 100vh;
+            color: white;
+            background-color: rgba(0, 0, 0, .7);
+            position: fixed;
+            top: 0px;
+            left: 0px;
+            z-index: 2000;                
+        }
+        .modal{
+            display: none;
+        }
+        #btnmodal{
+            background-color: #386897;
+            color: #fff;
+            border: 1px solid #386897;
+        }
+        #btnmodal:hover{
+            border: 1px solid #cad6e4;
+        }
+        #modal-erro{
+                width: 100vw;
+                height: 100vh;
+                color: white;
+                background-color: rgba(0, 0, 0, .7);
+                position: fixed;
+                top: 0px;
+                left: 0px;
+                z-index: 2000;                
+            }
+        .modal-erro{
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav class="fixed-top">
+            <a href="index.php" class="navbar-brand">
+                <img id="logo" src="../images/HR4-logo.png" alt="HR Saúde">HR Saúde
+            </a>
+            <div class="abrirMenu"><svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+              </svg></div>
+              <ul class="menu">
+                <li><a class="nav-link" href="novo_funcionario.html">Novo Funcionário</a></li>
+                <li><a class="nav-link" href="novo_paciente.php">Novo Paciente</a></li>
+                <li><a class="nav-link" href="listar_funcionarios.php">Listar Funcionários</a></li>
+                <li><a class="nav-link" href="listar_pacientes.php">Listar Pacientes</a></li>
+                <li><a class="nav-link" href="listar_enderecos.php">Listar Endereços</a></li>
+                <li><a class="nav-link" href="listar_todos_agendamentos.php">Listar todos Agendamentos</a></li>
+                <li><a class="nav-link" href="../logout.php">Sair</a></li>
+              <div class="fecharMenu"><svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                <path d="M1.293 1.293a1 1 0 0 1 1.414 0L8 6.586l5.293-5.293a1 1 0 1 1 1.414 1.414L9.414 8l5.293 5.293a1 1 0 0 1-1.414 1.414L8 9.414l-5.293 5.293a1 1 0 0 1-1.414-1.414L6.586 8 1.293 2.707a1 1 0 0 1 0-1.414z"/>
+              </svg></div>
+            </ul>
+        </nav>
+        <script src="../js/app.js"></script>
+</header>
+    <div class="container">
+        <main>
+            <div class="modal-erro container">
+                <div id = "modal-erro"  class="modal-content align-items-center justify-content-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" color = "red" fill="currentColor" class="bi bi-x-circle mb-3" viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                    </svg>
+                    <br>
+                    <h3> Erro ao fazer cadastro!</h3>
+                    <h5> Um dos campos não foi inserido ou email já cadastrado!</h5>
+                    <br>
+                    <button type="button" class = "buttonCloseErro btn-danger w-25">Tente novamente</button>
+                    
+                </div>
+            </div>
+            <div class="modal container" >
+                <div id = "modal"  class="modal-content align-items-center justify-content-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" color = #386897 fill="currentColor" class="bi bi-check2-circle mb-3" viewBox="0 0 16 16">
+                        <path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0z"/>
+                        <path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l7-7z"/>
+                    </svg>
+                    <h3> Cadastro Concluído!</h3>
+                    <br>
+                    <button id = "btnmodal" type="button" class = "buttonClose w-25">Fechar</button>
+                </div>
+            </div>
+            <div>
+                <h1 class="titulo">Cadastro de Paciente</h1>
+            </div>
+            <form>
+                <div class="row">
+                    
+                    <div class="form-floating mb-3 col-md-10">
+                        <input type="text" class="form-control" id="nome" name="nome" placeholder="" minlength="3"
+                            required autocomplete="off">
+                        <label for="nome" class="form-label">Nome</label>
+                    </div>
+                    <div class="form-floating col-md-2 mb-3">
+                        <select id="sexo" name="sexo" class="form-select" required>
+                            <option selected></option>
+                            <option value="Masculino">Masculino</option>
+                            <option value="Feminino">Feminino</option>
+                        </select>
+                        <label for="sexo" class="form-label">Sexo</label>
+                    </div>
+                    <div class="form-floating mb-3 col-md-8">
+                        <input type="email" class="form-control" id="email" name="email" placeholder="" minlength="3"
+                            required autocomplete="off">
+                        <label for="email" class="form-label">E-mail</label>
+                    </div>
+                    <div class="form-floating mb-3 col-md-4">
+                        <input type="tel" class="form-control" id="telefone" name="telefone" placeholder="" minlength="3" required
+                            autocomplete="off">
+                        <label for="tel" class="form-label">Telefone</label>
+                    </div>
+                    <div class="form-floating mb-3 col-md-4">
+                        <input type="text" class="form-control" id="cep" name="cep" placeholder="" minlength="3"
+                            required autocomplete="off">
+                        <label for="cep" class="form-label">CEP</label>
+                    </div>
+                    <div class="form-floating mb-3 col-md-8">
+                        <input type="text" class="form-control" id="logradouro" name="logradouro" placeholder=""
+                            minlength="3" required autocomplete="off">
+                        <label for="logradouro" class="form-label">Logradouro</label>
+                    </div>
+                    <div class="form-floating mb-3 col-md-8">
+                        <input type="text" class="form-control" id="cidade" name="cidade" placeholder="" minlength="3"
+                            required autocomplete="off">
+                        <label for="cidade" class="form-label">Cidade</label>
+                    </div>
+                    <div class="form-floating mb-3 col-md-4">
+                        <select id="estado" name="estado" class="form-select" required>
+                            <option selected></option>
+                            <option value="AC">AC</option>
+                            <option value="AL">AL</option>
+                            <option value="AP">AP</option>
+                            <option value="AM">AM</option>
+                            <option value="BA">BA</option>
+                            <option value="CE">CE</option>
+                            <option value="DF">DF</option>
+                            <option value="ES">ES</option>
+                            <option value="GO">GO</option>
+                            <option value="MA">MA</option>
+                            <option value="MT">MT</option>
+                            <option value="MS">MS</option>
+                            <option value="MG">MG</option>
+                            <option value="PA">PA</option>
+                            <option value="PB">PB</option>
+                            <option value="PR">PR</option>
+                            <option value="PE">PE</option>
+                            <option value="PI">PI</option>
+                            <option value="RJ">RJ</option>
+                            <option value="RN">RN</option>
+                            <option value="RS">RS</option>
+                            <option value="RO">RO</option>
+                            <option value="RR">RR</option>
+                            <option value="SC">SC</option>
+                            <option value="SP">SP</option>
+                            <option value="SE">SE</option>
+                            <option value="TO">TO</option>
+                        </select>
+                        <label for="estado" class="form-label">Estado</label>
+                    </div>                    
+                    <div class="form-floating mb-3 col-md-4">
+                        <input type="text" class="form-control" id="peso" name="peso" placeholder=""
+                            minlength="2" required autocomplete="off">
+                        <label for="peso" class="form-label">Peso</label>
+                    </div>
+                    <div class="form-floating mb-3 col-md-4">
+                        <input type="text" class="form-control" id="altura" name="altura" placeholder="" minlength="3"
+                            required autocomplete="off">
+                        <label for="altura" class="form-label">Altura</label>
+                    </div>
+                    <div class="form-floating mb-3 col-md-4">
+                        <select id="tipoSanguineo" name="tipoSanguineo" class="form-select" required>
+                            <option selected></option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>                            
+                        </select>
+                        <label for="tipoSanguineo" class="form-label">tipoSanguineo</label>
+                    </div>                    
+                    <div>
+                        <button id="botao" class="btn btn-primary col-md-12" type="button" value="Cadastrar">Cadastrar</button>
+                    </div>
+                </div>
+            </form>
+        </main>
+    </div>
+    <script>
+        function enviaFormulario() {
+            
+            let meuForm = document.querySelector("form");
+            let formData = new FormData(meuForm);
+            
+            const options = {
+                method: "POST",
+                body: formData
+            }
+            
+            fetch("cadastrar_paciente.php", options)
+                .then(response => response.json()) 
+                .then(data =>{
+                    console.log(data.success);
+                    if(data.success == true){
+                    document.querySelector(".modal").style.display = "block";
+                    meuForm.reset();
+                    }else{
+                            throw new Error(response.status);
+                        }
+                        })
+                .catch(error => {
+                    console.error(error);
+                    document.querySelector(".modal-erro").style.display = "block";
+                })
+        }
+
+        window.onload = function () {
+            const botao = document.querySelector("#botao");
+            botao.onclick = enviaFormulario;
+
+            
+            const modalErro = document.querySelector(".modal-erro");
+            const buttonCloseErro = modalErro.querySelector(".buttonCloseErro");
+            buttonCloseErro.addEventListener("click", function(){
+                modalErro.style.display = "none";
+        });
+
+            const modal = document.querySelector(".modal");
+            const buttonClose = modal.querySelector(".buttonClose");
+            buttonClose.addEventListener("click", function(){
+                modal.style.display = "none";
+    });
+        }
+
+        //bootstrap//
+        src = "https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+        integrity = "sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+        crossorigin = "anonymous"
+
+    </script>
+    <footer class="footer"> 
+        <div  class="itens">
+                <div>
+                    <h3>Sobre</h3>
+                    <p>Clínica médica HR Saúde</p>
+                </div>
+                <div>
+                    <h3>Forma de pagamento</h3>
+                    <p>Transferências bancárias, Paypal, Cartão e Dinheiro. </p>
+                </div>
+                <div>
+                    <h3>Contato</h3>
+                    <p>suporte@hrsaude.com</p>
+                    <p>800 654 321</p>
+                </div>
+            <ul class="icones"> 
+                <li><a href="#"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-facebook" viewBox="0 0 16 16">
+                    <path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951z"/>
+                    </svg></a></li>
+                <li><a href="#"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-linkedin" viewBox="0 0 16 16">
+                    <path d="M0 1.146C0 .513.526 0 1.175 0h13.65C15.474 0 16 .513 16 1.146v13.708c0 .633-.526 1.146-1.175 1.146H1.175C.526 16 0 15.487 0 14.854V1.146zm4.943 12.248V6.169H2.542v7.225h2.401zm-1.2-8.212c.837 0 1.358-.554 1.358-1.248-.015-.709-.52-1.248-1.342-1.248-.822 0-1.359.54-1.359 1.248 0 .694.521 1.248 1.327 1.248h.016zm4.908 8.212V9.359c0-.216.016-.432.08-.586.173-.431.568-.878 1.232-.878.869 0 1.216.662 1.216 1.634v3.865h2.401V9.25c0-2.22-1.184-3.252-2.764-3.252-1.274 0-1.845.7-2.165 1.193v.025h-.016a5.54 5.54 0 0 1 .016-.025V6.169h-2.4c.03.678 0 7.225 0 7.225h2.4z"/>
+                    </svg></a></li>
+                <li><a href="#"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-whatsapp" viewBox="0 0 16 16">
+                    <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+                    </svg></a></li>
+            </ul>
+        </div>
+        <div class="cop"><p>&copy; Copyright 2021. Todos os direitos reservados. HR Saúde LTDA.</p></div>
+    </footer>
+</body>
+
+</html>
